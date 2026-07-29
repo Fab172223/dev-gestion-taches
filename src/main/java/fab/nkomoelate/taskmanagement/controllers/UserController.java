@@ -9,10 +9,9 @@ import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RequiredArgsConstructor
 @RestController
@@ -32,5 +31,26 @@ public class UserController {
     public ResponseEntity<User> addUser(@Valid @RequestBody CreateUserRequest user){
         User userToCreate = userService.addUser(user);
         return ResponseEntity.status(HttpStatus.CREATED).body(userToCreate);
+    }
+    @GetMapping("{id}")
+    public ResponseEntity<User> getUser(@PathVariable Long id){
+        User user = userService.getUser(id);
+        return ResponseEntity.ok(user);
+    }
+    @GetMapping
+    public ResponseEntity<List<User>> getUsers(){
+        List<User> users = userService.getUsers();
+        return ResponseEntity.ok(users);
+    }
+    @PutMapping("{id}")
+    public ResponseEntity<User> updateUser(@Valid @RequestBody CreateUserRequest user, @PathVariable Long id){
+        User userToUpdate = userService.updateUser(user,id);
+        return ResponseEntity.ok(userToUpdate);
+    }
+
+    @DeleteMapping("{id}")
+    public ResponseEntity<Void> deleteUser(@PathVariable Long id){
+        userService.deleteUser(id);
+        return ResponseEntity.noContent().build();
     }
 }

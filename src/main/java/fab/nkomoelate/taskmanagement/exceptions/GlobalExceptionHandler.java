@@ -41,7 +41,7 @@ public class GlobalExceptionHandler {
                 .collect(Collectors.joining(", "));
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
-                .body(new ErrorResponse(400,message));
+                .body(new ErrorResponse(415,message));
     }
 
     @ExceptionHandler(Exception.class)
