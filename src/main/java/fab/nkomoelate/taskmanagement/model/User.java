@@ -26,6 +26,9 @@ public class User {
     @Email(message="Format d'email invalide")
     private String email;
 
+    @Column(nullable = false)
+    @NotNull(message="password obligatoire")
+    private String password;
     @OneToMany(mappedBy = "assignedUser")
     private List<Task> tasks;
 }
