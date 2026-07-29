@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.crossstore.ChangeSetPersister;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -19,7 +20,7 @@ import java.util.Optional;
 public class UserService {
 
     private final UserRepository userRepository;
-
+    private final PasswordEncoder passwordEncoder;
     public User addUser(CreateUserRequest user){
         User userToCreate = new User();
         try{
@@ -58,6 +59,7 @@ public class UserService {
         userToCreate.setEmail(user.email());
         userToCreate.setFirstName(user.firstName());
         userToCreate.setLastName(user.lastName());
+        userToCreate.setPassword(passwordEncoder.encode(user.password()));
         return userToCreate;
     }
 }
