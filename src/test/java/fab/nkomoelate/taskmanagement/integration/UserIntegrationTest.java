@@ -1,9 +1,10 @@
 package fab.nkomoelate.taskmanagement.integration;
-
 import fab.nkomoelate.taskmanagement.controllers.UserController.*;
 import fab.nkomoelate.taskmanagement.exceptions.TaskManagementException;
 import fab.nkomoelate.taskmanagement.model.User;
 import fab.nkomoelate.taskmanagement.repository.UserRepository;
+import fab.nkomoelate.taskmanagement.security.AuthResponse;
+import fab.nkomoelate.taskmanagement.security.RegisterRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,14 +32,28 @@ public class UserIntegrationTest {
     private UserRepository userRepository;
 
     @BeforeEach
-    void cleanUp(){
+    void setUp() {
         userRepository.deleteAll();
-    }
+        // Register + récupère le token
+        AuthResponse auth = restTestClient.post()
+                .uri("/auth/register")
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(new RegisterRequest("Test", "User", "test@test.com", "password123"))
+                .exchange()
+                .expectStatus().isCreated()
+                .expectBody(AuthResponse.class)
+                .returnResult()
+                .getResponseBody();
 
+        // Configure le client avec le token
+        restTestClient = restTestClient.mutate()
+                .defaultHeader("Authorization", "Bearer " + auth.token())
+                .build();
+    }
     @Test
     public void createUser_should_persist_an_user_in_database(){
         //given
-        CreateUserRequest userRequest = new CreateUserRequest("Fabienne","ELATE LEA","fabienneelatelea@gmail.com");
+        CreateUserRequest userRequest = new CreateUserRequest("Fabienne","ELATE LEA","fabienneelatelea@gmail.com","password");
         //when- vraie requete http
         restTestClient.post()
                 .uri("/api/users/")
@@ -55,7 +70,7 @@ public class UserIntegrationTest {
     @Test
     void createUser_should_return_409_when_email_already_exists() {
         // Given — on insère un premier user
-        CreateUserRequest firstRequest = new CreateUserRequest("Favie", "Flavien", "fabienneelatelea@gmail.com");
+        CreateUserRequest firstRequest = new CreateUserRequest("Favie", "Flavien", "fabienneelatelea@gmail.com","password");
         restTestClient.post()
                 .uri("/api/users/")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -64,7 +79,7 @@ public class UserIntegrationTest {
                 .expectStatus().isCreated();
 
         // When — on tente d'insérer un second avec le même email
-        CreateUserRequest duplicateRequest = new CreateUserRequest("Dupont", "Marie", "fabienneelatelea@gmail.com");
+        CreateUserRequest duplicateRequest = new CreateUserRequest("Dupont", "Marie", "fabienneelatelea@gmail.com","password");
         restTestClient.post()
                 .uri("/api/users/")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -76,7 +91,7 @@ public class UserIntegrationTest {
     @Test
     void getUser_should_return_user_when_found(){
         // Given — on insère un premier user
-        CreateUserRequest firstRequest = new CreateUserRequest("Favie", "Flavien", "fabienneelatelea@gmail.com");
+        CreateUserRequest firstRequest = new CreateUserRequest("Favie", "Flavien", "fabienneelatelea@gmail.com","password");
         User createdUser =restTestClient.post()
                 .uri("/api/users/")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -114,7 +129,7 @@ public class UserIntegrationTest {
     @Test
     public void updateUser_should_update_user_in_database(){
         // Given — on insère un premier user
-        CreateUserRequest firstRequest = new CreateUserRequest("Favie", "Flavien", "fabienneelatelea@gmail.com");
+        CreateUserRequest firstRequest = new CreateUserRequest("Favie", "Flavien", "fabienneelatelea@gmail.com","password");
         User createdUser =restTestClient.post()
                 .uri("/api/users/")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -128,7 +143,7 @@ public class UserIntegrationTest {
         // Vérification anti-NullPointerException
         assertThat(createdUser).isNotNull();
         assertThat(createdUser.getId()).isNotNull();
-        CreateUserRequest secondRequest = new CreateUserRequest("Favienne", "Flavienee", "fabienneelateleaC@gmail.com");
+        CreateUserRequest secondRequest = new CreateUserRequest("Favienne", "Flavienee", "fabienneelateleaC@gmail.com","password");
         //when
         restTestClient.put()
                 .uri("/api/users/{id}", createdUser.getId())
@@ -145,7 +160,7 @@ public class UserIntegrationTest {
     @Test
     public void updateUser_should_return_404_when_user_not_found(){
         // Given — on insère un premier user
-        CreateUserRequest secondRequest = new CreateUserRequest("Favienne", "Flavienee", "fabienneelateleaC@gmail.com");
+        CreateUserRequest secondRequest = new CreateUserRequest("Favienne", "Flavienee", "fabienneelateleaC@gmail.com","password");
         //when
         restTestClient.put()
                 .uri("/api/users/{id}", 5)
@@ -158,7 +173,7 @@ public class UserIntegrationTest {
     @Test
     public void deleteUser_should_remove_user_from_database(){
         // Given — on insère un premier user
-        CreateUserRequest firstRequest = new CreateUserRequest("Favie", "Flavien", "fabienneelatelea@gmail.com");
+        CreateUserRequest firstRequest = new CreateUserRequest("Favie", "Flavien", "fabienneelatelea@gmail.com","password");
         User createdUser =restTestClient.post()
                 .uri("/api/users/")
                 .contentType(MediaType.APPLICATION_JSON)
