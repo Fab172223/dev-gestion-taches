@@ -15,6 +15,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -28,13 +29,16 @@ class UserServiceTest {
     @Mock
     private UserRepository userRepository;
 
+    @Mock
+    private PasswordEncoder passwordEncoder;
+
     @InjectMocks
     private UserService userService;
 
     @Test
     void addUser_should_return_user_with_correct_data() {
         //given
-        CreateUserRequest userRequest = new CreateUserRequest("faille","taille","fablene@yahoo.fr");
+        CreateUserRequest userRequest = new CreateUserRequest("faille","taille","fablene@yahoo.fr","password");
         User user = User.builder()
                 .id(1L)
                 .lastName("faille")
@@ -42,6 +46,7 @@ class UserServiceTest {
                 .email("fablene@yahoo.fr")
                 .build();
         when(userRepository.save(any(User.class))).thenReturn(user);
+        when(passwordEncoder.encode(any())).thenReturn("hashedPassword");
         //when
         User result = userService.addUser(userRequest);
         //then
@@ -53,7 +58,7 @@ class UserServiceTest {
     @Test
     void addUser_should_call_only_once_with_no_extra_interactions() {
         //given
-        CreateUserRequest userRequest = new CreateUserRequest("faille","taille","fablene@yahoo.fr");
+        CreateUserRequest userRequest = new CreateUserRequest("faille","taille","fablene@yahoo.fr","password");
         User user = User.builder()
                 .id(1L)
                 .lastName("faille")
@@ -61,6 +66,7 @@ class UserServiceTest {
                 .email("fablene@yahoo.fr")
                 .build();
         when(userRepository.save(any(User.class))).thenReturn(user);
+        when(passwordEncoder.encode(any())).thenReturn("hashedPassword");
         //when
        userService.addUser(userRequest);
         //then
@@ -70,8 +76,9 @@ class UserServiceTest {
     @Test
     void addUser_should_return_exception_if_email_exists_in_bdd(){
         //given
-        CreateUserRequest userRequest = new CreateUserRequest("aile","faire","der@fil.fr");
+        CreateUserRequest userRequest = new CreateUserRequest("aile","faire","der@fil.fr","password");
         when(userRepository.save(any(User.class))).thenThrow(new DataIntegrityViolationException("duplicate key"));
+        when(passwordEncoder.encode(any())).thenReturn("hashedPassword");
         // when / then
         assertThatThrownBy(() -> userService.addUser(userRequest)).isInstanceOf(TaskManagementException.EmailAlreadyExistsException.class);
     }
@@ -81,8 +88,9 @@ class UserServiceTest {
         //given
         CreateUserRequest userRequest = new CreateUserRequest( "test0",
                 "test1",
-                "f@gmail.com");
+                "f@gmail.com","password");
         //when
+        when(passwordEncoder.encode(any())).thenReturn("hashedPassword");
         User userToSave = this.userService.mapperUser(userRequest,new User());
         //then
         assertThat(userToSave.getEmail()).isEqualTo(userRequest.email());
@@ -138,8 +146,8 @@ class UserServiceTest {
                 .lastName("tata")
                 .email("toto@toto.tito")
                 .build();
-        CreateUserRequest request = new CreateUserRequest("tonton", "fred", "toto@toto.toto");
-
+        CreateUserRequest request = new CreateUserRequest("tonton", "fred", "toto@toto.toto","password");
+        when(passwordEncoder.encode(any())).thenReturn("hashedPassword");
         when(userRepository.findById(1L)).thenReturn(Optional.of(userBdd));
         when(userRepository.save(any(User.class))).thenReturn(userBdd);
 
@@ -150,10 +158,11 @@ class UserServiceTest {
         assertThat(result).isNotNull();
         assertThat(result.getId()).isEqualTo(1L);
     }
+
     @Test
     void updateUser_should_throw_UserNotFoundException_when_id_not_found(){
         //given
-        CreateUserRequest request = new CreateUserRequest("tonton", "fred", "toto@toto.toto");
+        CreateUserRequest request = new CreateUserRequest("tonton", "fred", "toto@toto.toto","password");
         when(userRepository.findById(1L)).thenReturn(Optional.empty());
         //when/then
         assertThatThrownBy(() -> userService.updateUser(request,1L)).isInstanceOf(TaskManagementException.UserNotFoundException.class);
@@ -162,11 +171,11 @@ class UserServiceTest {
     void updateUser_should_throw_EmailAlreadyExistsException_when_email_duplicated() {
         // Given
         User userBdd = User.builder().id(4L).email("old@email.com").build();
-        CreateUserRequest request = new CreateUserRequest("tonton", "fred", "existing@email.com");
+        CreateUserRequest request = new CreateUserRequest("tonton", "fred", "existing@email.com","password");
         when(userRepository.findById(4L)).thenReturn(Optional.of(userBdd));
         when(userRepository.save(any(User.class)))
                 .thenThrow(new DataIntegrityViolationException("duplicate key"));
-
+        when(passwordEncoder.encode(any())).thenReturn("hashedPassword");
         // When / Then
         assertThatThrownBy(() -> userService.updateUser(request, 4L))
                 .isInstanceOf(TaskManagementException.EmailAlreadyExistsException.class);
@@ -176,7 +185,6 @@ class UserServiceTest {
         // Given
         User user = User.builder().id(1L).email("test@test.com").build();
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
-
         // When
         userService.deleteUser(1L);
 
@@ -188,7 +196,6 @@ class UserServiceTest {
     void deleteUser_should_throw_UserNotFoundException_when_id_not_found() {
         // Given
         when(userRepository.findById(1L)).thenReturn(Optional.empty());
-
         // When / Then
         assertThatThrownBy(() -> userService.deleteUser(1L))
                 .isInstanceOf(TaskManagementException.UserNotFoundException.class);

@@ -3,6 +3,8 @@ package fab.nkomoelate.taskmanagement.controller;
 import fab.nkomoelate.taskmanagement.controllers.UserController;
 import fab.nkomoelate.taskmanagement.exceptions.TaskManagementException;
 import fab.nkomoelate.taskmanagement.model.User;
+import fab.nkomoelate.taskmanagement.security.JwtService;
+import fab.nkomoelate.taskmanagement.security.UserDetailsServiceImpl;
 import fab.nkomoelate.taskmanagement.services.UserService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,6 +33,12 @@ class UserControllerTest {
     @MockitoBean
     private UserService userService;
 
+    @MockitoBean
+    private JwtService jwtService;
+
+    @MockitoBean
+    private UserDetailsServiceImpl userDetailsService;
+
     @Autowired
     private MockMvc mockMvc;
 
@@ -53,7 +61,8 @@ class UserControllerTest {
                                             {
                                                 "lastName" : "far",
                                                 "firstName" : "away",
-                                                "email" : "goMyLove@toto.com"
+                                                "email" : "goMyLove@toto.com",
+                                    "password": "test1234"
                                             }
                                         """
                         ))
@@ -76,7 +85,8 @@ class UserControllerTest {
                                 {
                                     "lastName": "Dupont",
                                     "firstName": "Marie",
-                                    "email": "marie@example.com"
+                                    "email": "marie@example.com",
+                                    "password": "test1234"
                                 }
                                 """))
                 .andExpect(status().isCreated());
@@ -101,7 +111,8 @@ class UserControllerTest {
                                 {
                                     "lastName": "Dupont",
                                     "firstName": "Marie",
-                                    "email": null
+                                    "email": null,
+                                    "password": "test1234"
                                 }
                                 """))
                 .andExpect(status().isBadRequest());
@@ -119,7 +130,8 @@ class UserControllerTest {
                                 {
                                     "lastName": "Dupont",
                                     "firstName": "Marie",
-                                    "email": "ceci-nest-pas-un-email"
+                                    "email": "ceci-nest-pas-un-email",
+                                    "password": "test1234"
                                 }
                                 """))
                 .andExpect(status().isBadRequest());
@@ -139,7 +151,8 @@ class UserControllerTest {
                                 {
                                     "lastName": "Dupont",
                                     "firstName": "Marie",
-                                    "email": "marie@example.com"
+                                    "email": "marie@example.com",
+                                    "password": "test1234"
                                 }
                                 """))
                 .andExpect(status().isUnsupportedMediaType());
@@ -158,7 +171,8 @@ class UserControllerTest {
                                 {
                                     "lastName": "Dupont",
                                     "firstName": "Marie",
-                                    "email": "marie@example.com"
+                                    "email": "marie@example.com",
+                                    "password": "test1234"
                                 }
                                 """))
                 .andExpect(status().isInternalServerError());
@@ -176,7 +190,8 @@ class UserControllerTest {
                         {
                             "lastName":"Robert",
                             "firstName":"Loic",
-                            "email":"marie@example.com"
+                            "email":"marie@example.com",
+                                    "password": "test1234"
                         }
                         """
                 )
@@ -267,7 +282,8 @@ class UserControllerTest {
                                 {
                                     "lastName": "Dupont",
                                     "firstName": "Marie",
-                                    "email": "marie@example.com"
+                                    "email": "marie@example.com",
+                                    "password": "test1234"
                                 }
                                 """))
                 .andExpect(status().isOk())
@@ -288,7 +304,8 @@ class UserControllerTest {
                                 {
                                     "lastName": "Dupont",
                                     "firstName": "Marie",
-                                    "email": "marie@example.com"
+                                    "email": "marie@example.com",
+                                    "password": "test1234"
                                 }
                                 """))
                 .andExpect(status().isNotFound());
@@ -307,7 +324,8 @@ class UserControllerTest {
                                 {
                                     "lastName": "Dupont",
                                     "firstName": "Marie",
-                                    "email": "marie@example.com"
+                                    "email": "marie@example.com",
+                                    "password": "test1234"
                                 }
                                 """))
                 .andExpect(status().isConflict());
